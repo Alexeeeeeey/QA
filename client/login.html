@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Вход</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <div class="container">
+    <h1>Вход</h1>
+    <form id="login-form">
+      <input type="email" id="email" placeholder="Email" required/>
+      <input type="password" id="password" placeholder="Пароль" required/>
+      <button type="submit">Войти</button>
+    </form>
+    <div class="message" id="msg"></div>
+    <p>Ещё нет аккаунта? <a href="register.html">Зарегистрироваться</a></p>
+  </div>
+
+  <script>
+    document.getElementById('login-form').onsubmit = async e => {
+      e.preventDefault();
+      const email = e.target.email.value;
+      const password = e.target.password.value;
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({email, password})
+      });
+      const json = await res.json();
+      const msg = document.getElementById('msg');
+      if (res.ok) {
+        localStorage.setItem('auth_token', json.token);
+        location.href = 'profile.html';
+      } else {
+        msg.textContent = json.error;
+      }
+    };
+  </script>
+</body>
+</html>

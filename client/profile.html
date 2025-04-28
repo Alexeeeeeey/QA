@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Профиль</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <div class="container">
+    <h1>Профиль</h1>
+    <div id="info">
+      <p><strong>ID:</strong> <span id="user-id"></span></p>
+      <p><strong>Email:</strong> <span id="user-email"></span></p>
+      <p><strong>Зарегистрирован:</strong> <span id="user-date"></span></p>
+    </div>
+    <button id="logout">Выйти</button>
+  </div>
+
+  <script>
+    async function loadProfile() {
+      const token = localStorage.getItem('auth_token');
+      if (!token) return location.href = 'login.html';
+      const res = await fetch('/api/auth/profile', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (!res.ok) {
+        localStorage.removeItem('auth_token');
+        return location.href = 'login.html';
+      }
+      const user = await res.json();
+      document.getElementById('user-id').textContent = user.id;
+      document.getElementById('user-email').textContent = user.email;
+      document.getElementById('user-date').textContent = new Date(user.created_at).toLocaleString();
+    }
+
+    document.getElementById('logout').onclick = () => {
+      localStorage.removeItem('auth_token');
+      location.href = 'login.html';
+    };
+
+    window.onload = loadProfile;
+  </script>
+</body>
+</html>

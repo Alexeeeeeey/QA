@@ -1,0 +1,33 @@
+# ── Общие ──
+# Скрытые системные файлы macOS/Windows
+.DS_Store
+Thumbs.db
+
+# Логи
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# ── Docker ──
+# Данные Postgres, если вы их монтируете в директорию проекта
+postgres_data/
+
+# ── Сервер (Node.js) ──
+# Папка с внешними библиотеками
+server/node_modules/
+
+# Секреты и настройки окружения
+server/.env
+
+# Файлы перезапуска (PID)
+*.pid
+
+# ── Клиент (статический фронт) ──
+# Если вдруг появятся временные файлы nginx  
+client/nginx.conf~
+
+# Если в будущем будете собирать React/Vue/Angular:
+# client/node_modules/
+# client/dist/
