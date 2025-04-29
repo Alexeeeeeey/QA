@@ -1,11 +1,11 @@
-version: '3.8'
+
 services:
   postgres:
     image: postgres:14
     environment:
-      POSTGRES_USER: auth_user
-      POSTGRES_PASSWORD: auth_password
-      POSTGRES_DB: auth_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -13,13 +13,15 @@ services:
 
   server:
     build: ./server
+    env_file:
+      - .env
     environment:
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER=auth_user
-      - DB_PASSWORD=auth_password
-      - DB_NAME=auth_db
-      - JWT_SECRET=your_super_secret_key
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - JWT_SECRET=${JWT_SECRET}
     depends_on:
       - postgres
     ports:

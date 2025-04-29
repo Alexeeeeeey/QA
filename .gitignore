@@ -31,3 +31,5 @@ client/nginx.conf~
 # Если в будущем будете собирать React/Vue/Angular:
 # client/node_modules/
 # client/dist/
+# Игнорировать все .env-файлы
+*.env
