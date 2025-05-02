@@ -18,28 +18,104 @@
   </div>
 
   <script>
-    async function loadProfile() {
-      const token = localStorage.getItem('auth_token');
-      if (!token) return location.href = 'login.html';
-      const res = await fetch('/api/auth/profile', {
-        headers: { 'Authorization': 'Bearer ' + token }
-      });
-      if (!res.ok) {
-        localStorage.removeItem('auth_token');
+   async function refreshAuthToken() {
+  const refreshToken = sessionStorage.getItem('refresh_token');
+  if (!refreshToken) return false;
+  
+  try {
+    const res = await fetch('/api/auth/refresh-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken })
+    });
+    
+    if (!res.ok) {
+      throw new Error('Failed to refresh token');
+    }
+    
+    const json = await res.json();
+    sessionStorage.setItem('auth_token', json.token);
+    
+    // Обновляем время истечения токена
+    const tokenExpiry = new Date();
+    tokenExpiry.setHours(tokenExpiry.getHours() + 23);
+    sessionStorage.setItem('token_expiry', tokenExpiry.toISOString());
+    
+    return true;
+  } catch (error) {
+    console.error('Token refresh failed:', error);
+    return false;
+  }
+}
+
+async function loadProfile() {
+  // Проверяем, не истёк ли токен
+  const tokenExpiry = sessionStorage.getItem('token_expiry');
+  if (tokenExpiry && new Date() > new Date(tokenExpiry)) {
+    // Токен скоро истечёт, пробуем обновить
+    const refreshed = await refreshAuthToken();
+    if (!refreshed) {
+      // Не удалось обновить, перенаправляем на страницу входа
+      sessionStorage.clear();
+      return location.href = 'login.html';
+    }
+  }
+  
+  const token = sessionStorage.getItem('auth_token');
+  if (!token) return location.href = 'login.html';
+  
+  const res = await fetch('/api/auth/profile', {
+    headers: { 'Authorization': 'Bearer ' + token }
+  });
+  
+  if (!res.ok) {
+    if (res.status === 401) {
+      // Токен недействителен, пробуем обновить
+      const refreshed = await refreshAuthToken();
+      if (!refreshed) {
+        sessionStorage.clear();
         return location.href = 'login.html';
       }
-      const user = await res.json();
-      document.getElementById('user-id').textContent = user.id;
-      document.getElementById('user-email').textContent = user.email;
-      document.getElementById('user-date').textContent = new Date(user.created_at).toLocaleString();
+      // Пробуем загрузить профиль снова
+      return loadProfile();
     }
+    
+    sessionStorage.clear();
+    return location.href = 'login.html';
+  }
+  
+  const user = await res.json();
+  document.getElementById('user-id').textContent = user.id;
+  document.getElementById('user-email').textContent = user.email;
+  document.getElementById('user-date').textContent = new Date(user.created_at).toLocaleString();
+}
 
-    document.getElementById('logout').onclick = () => {
-      localStorage.removeItem('auth_token');
-      location.href = 'login.html';
-    };
+document.getElementById('logout').onclick = async () => {
+  const token = sessionStorage.getItem('auth_token');
+  const refreshToken = sessionStorage.getItem('refresh_token');
+  
+  if (token) {
+    try {
+      // Отправляем запрос на отзыв токена
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ refreshToken })
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  }
+  
+  // Очищаем хранилище токенов
+  sessionStorage.clear();
+  location.href = 'login.html';
+};
 
-    window.onload = loadProfile;
+window.onload = loadProfile;
   </script>
 </body>
 </html>

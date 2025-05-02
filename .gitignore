@@ -33,3 +33,5 @@ client/nginx.conf~
 # client/dist/
 # Игнорировать все .env-файлы
 *.env
+all_files_and_code.txt
+export-files.js
